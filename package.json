@@ -1,0 +1,25 @@
+{
+  "name": "gate_test_backend",
+  "version": "1.0.0",
+  "main": "src/app.ts",
+  "author": "abundance <abundanceanyanwu@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "start": "node ./bin/app.js",
+    "dev": "ts-node ./src/app.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.11.0",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.30",
+    "express": "^4.19.2",
+    "prisma": "^5.11.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0",
+    "typescript": "^5.4.3"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2"
+  }
+}
