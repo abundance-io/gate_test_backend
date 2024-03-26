@@ -1,17 +1,21 @@
-import { Router, Request, Response } from "express";
-import { WrapBody } from "./types";
+import { Router, Request, Response, NextFunction } from "express";
 import { Tspec } from "tspec";
 import { User } from "@prisma/client";
 import { PrismaClient } from "@prisma/client";
-import { Error } from "./types";
 import bcrypt from "bcrypt";
+import "express-async-errors";
+
+import { ApiError } from "../types/errors";
+import { WrapBody } from "../types/utils";
+import { SignInData, SignUpData, UserData } from "../types/api";
 
 const router = Router();
 const prisma = new PrismaClient();
 
 const signUp = async (
-  req: WrapBody<User>,
-  res: Response<Omit<User, "password"> | Error>
+  req: WrapBody<SignUpData>,
+  res: Response<UserData>,
+  next: NextFunction
 ) => {
   if (
     await prisma.user.findUnique({
@@ -20,26 +24,39 @@ const signUp = async (
       },
     })
   ) {
-    res.json({ err: "Email already used" }).status(400);
+    throw new ApiError("Email already used", 400);
   } else {
     bcrypt.hash(req.body.password, 10, async (err, hash) => {
       if (err) {
-        res.json({ err: "Internal server error" });
+        throw new ApiError("Internal server error", 500);
       } else {
-        await prisma.user.create({
+        const newUser = await prisma.user.create({
           data: {
             email: req.body.email,
             password: hash,
             firstname: req.body.firstname,
             lastname: req.body.firstname,
           },
+          select: {
+            email: true,
+            firstname: true,
+            lastname: true,
+            profile_picture: true,
+          },
         });
+        if (newUser) {
+          res.json(newUser);
+        } else {
+          throw new ApiError("Error creating user", 500);
+        }
       }
     });
   }
 };
 
-export type ApiSpec = Tspec.DefineApiSpec<{
+const signIn = async (req: Request<SignInData>, res: Response<UserData>) => {};
+
+export type AuthApiSpec = Tspec.DefineApiSpec<{
   paths: {
     "/auth/signup": {
       post: {
@@ -50,6 +67,6 @@ export type ApiSpec = Tspec.DefineApiSpec<{
   };
 }>;
 
-// router.get("/abundance", getAuthor);
+router.post("/signup", signUp);
 
 export default router;
