@@ -1,13 +1,30 @@
 import express from "express";
-import { PrismaClient } from "@prisma/client";
+import authRouter from "./routes/auth";
+import bodyParser from "body-parser";
+import { TspecDocsMiddleware } from "tspec";
 
-const app = express();
 const PORT = 3000;
 
-app.get("/", (req, res) => {
-  res.status(200).send("this is a random message");
-});
+const initServer = async () => {
+  const app = express();
+  app.use(bodyParser.json());
 
-app.listen(PORT, () => {
-  console.log(`Listening on port ${PORT}`);
-});
+  //add routers
+  app.use("/auth", authRouter);
+
+  //documentation
+  app.use(
+    "/docs",
+    await TspecDocsMiddleware({
+      openapi: {
+        title: "Gates test backend",
+      },
+    })
+  );
+
+  app.listen(PORT, () => {
+    console.log(`Listening on port ${PORT}`);
+  });
+};
+
+initServer();
