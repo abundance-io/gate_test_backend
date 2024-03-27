@@ -1,0 +1,42 @@
+<form
+  id="uploadphotosform"
+  action="http://localhost:3000/user/uploadphotos"
+  method="POST"
+  enctype="multipart/form-data"
+>
+  <input
+    type="text"
+    name="jwtToken"
+    id="jwtToken"
+    placeholder="Enter JWT Token"
+    required
+  />
+  <input type="file" name="file" multiple />
+  <input type="submit" value="Upload File" />
+</form>
+
+<script>
+  document
+    .getElementById("uploadphotosform")
+    .addEventListener("submit", function (event) {
+      event.preventDefault(); // Prevent default form submission
+
+      var jwtToken = document.getElementById("jwtToken").value;
+
+      var formData = new FormData(this);
+
+      formData.append("Authorization", "Bearer " + jwtToken);
+
+      var xhr = new XMLHttpRequest();
+
+      xhr.open("POST", this.action, true);
+
+      xhr.setRequestHeader("Authorization", "Bearer " + jwtToken);
+
+      xhr.onload = function () {
+        console.log(xhr.responseText);
+      };
+
+      xhr.send(formData);
+    });
+</script>

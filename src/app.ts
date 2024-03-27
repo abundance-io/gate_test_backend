@@ -4,6 +4,7 @@ import userRouter from "./routes/user";
 import bodyParser from "body-parser";
 import { TspecDocsMiddleware } from "tspec";
 import { errorHandler } from "./middleware/error.middleware";
+import cors from "cors";
 import dotenv from "dotenv";
 
 const PORT = 3000;
@@ -16,6 +17,7 @@ const initServer = async () => {
 
   const app = express();
 
+  app.use(cors());
   app.use(bodyParser.json());
   //add routers
   app.use("/auth", authRouter);

@@ -6,7 +6,7 @@ import { verifyToken } from "../middleware/auth.middleware";
 import "express-async-errors";
 import { ApiError } from "../types/errors";
 import { cloudinary, upload } from "../utils/storage";
-import { ImageId } from "../types/api";
+import { ImageId, ImageIds } from "../types/api";
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -16,14 +16,43 @@ const sendMail = async (req: Request, res: Response) => {
   res.send(email);
 };
 
-const uploadPhotos = async (req: Request, res: Response) => {
+const uploadPhotos = async (req: Request, res: Response<ImageIds>) => {
   const email: string = res.locals.email;
 
   if (req.files) {
     const files = req.files as Express.Multer.File[];
-    files.forEach((file) => {
-      console.log(file.filename);
+    const uploadIds = await Promise.all(
+      files.map(async (file) => {
+        try {
+          const base64EncodedImage = Buffer.from(file.buffer).toString(
+            "base64"
+          );
+          const dataUri = `data:${file.mimetype};base64,${base64EncodedImage}`;
+          const uploadResponse = await cloudinary.uploader.upload(dataUri);
+          return uploadResponse.public_id;
+        } catch (err) {
+          throw err;
+        }
+      })
+    );
+    const prevPhotos = await prisma.user.findUnique({
+      where: {
+        email: email,
+      },
+      select: {
+        photos: true,
+      },
     });
+
+    await prisma.user.update({
+      where: {
+        email: email,
+      },
+      data: {
+        photos: prevPhotos ? prevPhotos.photos.concat(uploadIds) : uploadIds,
+      },
+    });
+    res.json({ publicIds: uploadIds });
   } else {
   }
 };
@@ -37,9 +66,7 @@ const uploadProfile = async (req: Request, res: Response<ImageId>) => {
         "base64"
       );
       const dataUri = `data:${req.file.mimetype};base64,${base64EncodedImage}`;
-      console.log("uploadingg");
       const uploadResponse = await cloudinary.uploader.upload(dataUri);
-      console.log("upload complete");
       await prisma.user.update({
         where: {
           email: email,
@@ -85,7 +112,7 @@ export type UserApiSpec = Tspec.DefineApiSpec<{
         summary: "upload user photos";
         /** @mediaType multipart/form-data */
         body: {
-          files: Tspec.BinaryString[];
+          file: Tspec.BinaryString;
         };
 
         responses: { 200: ImageId };
