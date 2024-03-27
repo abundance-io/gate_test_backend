@@ -8,6 +8,8 @@ services:
       - 3000:3000
     environment:
       - DATABASE_URL=postgresql://admin:adminpassword@db:5432/gates_test
+      - JWT_KEY="supersecretgateskey"
+      - MAILCHIMP_KEY="c5cff89aad73f29ba4d647fd5959b4d9-us18"
     depends_on:
       - db
 
