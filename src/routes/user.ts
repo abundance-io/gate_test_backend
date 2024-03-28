@@ -6,15 +6,14 @@ import { verifyToken } from "../middleware/auth.middleware";
 import "express-async-errors";
 import { ApiError } from "../types/errors";
 import { cloudinary, upload } from "../utils/storage";
-import { ImageId, ImageIds } from "../types/api";
+import { ImageId, ImageIds, Mail, UserData } from "../types/api";
+import { WrapBody } from "../types/utils";
+import { sendMail } from "../utils/mail";
+import { Message } from "../types/api";
+import { getUserDataFields } from "../utils/api";
 
 const router = Router();
 const prisma = new PrismaClient();
-
-const sendMail = async (req: Request, res: Response) => {
-  const email: string = res.locals.email;
-  res.send(email);
-};
 
 const uploadPhotos = async (req: Request, res: Response<ImageIds>) => {
   const email: string = res.locals.email;
@@ -81,17 +80,44 @@ const uploadProfile = async (req: Request, res: Response<ImageId>) => {
       throw err;
     }
   } else {
-    throw new ApiError("no file attached", 400);
+    throw new ApiError("file invalid", 400);
+  }
+};
+
+const sendUserMail = async (req: WrapBody<Mail>, res: Response<Message>) => {
+  const email = res.locals.email;
+  await sendMail(req.body);
+  res.json({ message: "email sent" });
+};
+
+const getUser = async (req: Request, res: Response<UserData>) => {
+  const email = res.locals.email;
+  const user = await prisma.user.findUnique({
+    where: {
+      email: email,
+    },
+  });
+
+  if (user) {
+    res.json(getUserDataFields(user));
+  } else {
+    throw new ApiError("User not found", 404);
   }
 };
 
 export type UserApiSpec = Tspec.DefineApiSpec<{
   security: "jwt";
   paths: {
+    "/user": {
+      get: {
+        summary: "get user details";
+        handler: typeof getUser;
+      };
+    };
     "/user/sendmail": {
       post: {
         summary: "send mail to user";
-        // handler: ;
+        handler: typeof sendUserMail;
       };
     };
 
@@ -121,7 +147,8 @@ export type UserApiSpec = Tspec.DefineApiSpec<{
   };
 }>;
 
-router.post("/sendmail", verifyToken, sendMail);
+router.get("/", verifyToken, getUser);
+router.post("/sendmail", verifyToken, sendUserMail);
 router.post(
   "/uploadprofile",
   verifyToken,

@@ -4,6 +4,7 @@ import { User } from "@prisma/client";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { z } from "zod";
 
 import { ApiError } from "../types/errors";
 import { WrapBody } from "../types/utils";
@@ -16,8 +17,14 @@ const SECRET_KEY = process.env.SECRET_KEY as string;
 
 const router = Router();
 const prisma = new PrismaClient();
+const emailSchema = z.string().email();
 
 const signUp = async (req: WrapBody<SignUpData>, res: Response<UserData>) => {
+  try {
+    emailSchema.parse(req.body.email);
+  } catch {
+    throw new ApiError("email is invalid", 400);
+  }
   if (
     await prisma.user.findUnique({
       where: {
@@ -50,6 +57,11 @@ const signUp = async (req: WrapBody<SignUpData>, res: Response<UserData>) => {
 };
 
 const signIn = async (req: WrapBody<SignInData>, res: Response<JwtToken>) => {
+  try {
+    emailSchema.parse(req.body.email);
+  } catch {
+    throw new ApiError("email is invalid", 400);
+  }
   const user = await prisma.user.findUnique({
     where: {
       email: req.body.email,

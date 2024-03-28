@@ -19,3 +19,13 @@ export type ImageId = {
 export type ImageIds = {
   publicIds: string[];
 };
+
+export type Mail = {
+  to: string;
+  subject: string;
+  body: string;
+};
+
+export type Message = {
+  message: string;
+};
