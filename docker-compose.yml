@@ -6,6 +6,8 @@ services:
       - .:/src
     ports:
       - 3000:3000
+    environment:
+      - DATABASE_URL=postgresql://admin:adminpassword@db:5432/gates_test
     depends_on:
       - db
 
