@@ -5,7 +5,7 @@ export type SignInData = {
   password: string;
 };
 
-export type SignUpData = Omit<User, "profile_picture" | "id">;
+export type SignUpData = Omit<User, "profile_picture" | "id" | "photos">;
 export type UserData = Omit<User, "password" | "id">;
 
 export type JwtToken = {

@@ -11,6 +11,8 @@ import { WrapBody } from "../types/utils";
 import { JwtToken, SignInData, SignUpData, UserData } from "../types/api";
 import { getUserDataFields } from "../utils/api";
 import "express-async-errors";
+import { validateData } from "../utils/schema";
+import { signUpSchema, signInSchema } from "../schemas/auth";
 
 //checked on load - can cast directly
 const SECRET_KEY = process.env.SECRET_KEY as string;
@@ -20,11 +22,6 @@ const prisma = new PrismaClient();
 const emailSchema = z.string().email();
 
 const signUp = async (req: WrapBody<SignUpData>, res: Response<UserData>) => {
-  try {
-    emailSchema.parse(req.body.email);
-  } catch {
-    throw new ApiError("email is invalid", 400);
-  }
   if (
     await prisma.user.findUnique({
       where: {
@@ -57,11 +54,6 @@ const signUp = async (req: WrapBody<SignUpData>, res: Response<UserData>) => {
 };
 
 const signIn = async (req: WrapBody<SignInData>, res: Response<JwtToken>) => {
-  try {
-    emailSchema.parse(req.body.email);
-  } catch {
-    throw new ApiError("email is invalid", 400);
-  }
   const user = await prisma.user.findUnique({
     where: {
       email: req.body.email,
@@ -99,7 +91,7 @@ export type AuthApiSpec = Tspec.DefineApiSpec<{
   };
 }>;
 
-router.post("/signup", signUp);
-router.post("/signin", signIn);
+router.post("/signup", validateData(signUpSchema), signUp);
+router.post("/signin", validateData(signInSchema), signIn);
 
 export default router;

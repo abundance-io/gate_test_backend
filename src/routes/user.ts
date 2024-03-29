@@ -11,6 +11,8 @@ import { WrapBody } from "../types/utils";
 import { sendMail } from "../utils/mail";
 import { Message } from "../types/api";
 import { getUserDataFields } from "../utils/api";
+import { validateData } from "../utils/schema";
+import { sendMailSchema } from "../schemas/user";
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -71,7 +73,7 @@ const uploadProfile = async (req: Request, res: Response<ImageId>) => {
           email: email,
         },
         data: {
-          profile_picture: dataUri,
+          profile_picture: uploadResponse.public_id,
         },
       });
 
@@ -148,7 +150,12 @@ export type UserApiSpec = Tspec.DefineApiSpec<{
 }>;
 
 router.get("/", verifyToken, getUser);
-router.post("/sendmail", verifyToken, sendUserMail);
+router.post(
+  "/sendmail",
+  validateData(sendMailSchema),
+  verifyToken,
+  sendUserMail
+);
 router.post(
   "/uploadprofile",
   verifyToken,

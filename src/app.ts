@@ -6,15 +6,13 @@ import { TspecDocsMiddleware } from "tspec";
 import { errorHandler } from "./middleware/error.middleware";
 import cors from "cors";
 import dotenv from "dotenv";
+import { checkEnvs } from "./utils/env";
 
 const PORT = 3000;
 dotenv.config();
 
 const initServer = async () => {
-  if (!process.env.SECRET_KEY) {
-    throw new Error("jwt secret key not set");
-  }
-
+  checkEnvs();
   const app = express();
 
   app.use(cors());

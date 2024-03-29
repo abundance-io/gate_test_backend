@@ -6,4 +6,4 @@ COPY . .
 
 RUN yarn 
 
-ENTRYPOINT yarn dev
+ENTRYPOINT bash -c "npx prisma migrate dev --name 'intialized db'; yarn dev"
