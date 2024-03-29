@@ -25,7 +25,7 @@ const initServer = async () => {
 
   //documentation
   app.use(
-    "/docs",
+    "/",
     await TspecDocsMiddleware({
       openapi: {
         title: "Gates test backend",
